@@ -27,6 +27,10 @@ export interface BookingCardProps {
   id: string;
   /** UTC epoch seconds -- `null` only for a pre-3.4 booking with no slot. */
   slotStartsAt: number | null;
+  /** UTC epoch seconds -- dispute opening deadline calculated by the server. */
+  disputeDeadline: number | null;
+  /** UTC epoch seconds from the booking payload. */
+  serverTime: number;
   deposit: Money;
   balance: Money;
   escrowState: "locked" | "released" | "refunded" | null;
@@ -46,6 +50,10 @@ export interface BookingCardProps {
    * through Pactly -- drives the balance row's own "View payment record"
    * link. */
   balancePaymentTxHash: string | null;
+  /** The anchor's transaction id for the local-currency deposit -- the
+   * reference support needs to trace a failed or partial bank transfer.
+   * Hidden when absent. */
+  anchorTransactionId?: string | null;
   /** Story 3.6: the signed-in wallet's own session, passed through to
    * {@link BookingActions} -- both pages that render this card already
    * require sign-in to show anything, so this is always present whenever an
@@ -102,6 +110,8 @@ export function BookingCard({
   subheading,
   id,
   slotStartsAt,
+  disputeDeadline,
+  serverTime,
   deposit,
   balance,
   escrowState,
@@ -112,6 +122,7 @@ export function BookingCard({
   holdReleasedReason,
   contractId,
   balancePaymentTxHash,
+  anchorTransactionId,
   session,
   onActionSubmitted,
   onUnauthorized,
@@ -177,6 +188,14 @@ export function BookingCard({
             <TryAmount amount={balance.amount} /> · {BALANCE_STATE_LABEL[balanceState]}
           </dd>
         </div>
+        {anchorTransactionId && (
+          <div className="booking-card__amount-row">
+            <dt>Bank transfer reference</dt>
+            <dd className="tabular-nums" style={{ overflowWrap: "anywhere", userSelect: "all" }}>
+              {anchorTransactionId}
+            </dd>
+          </div>
+        )}
       </dl>
 
       {/* Review follow-up: lives here, not in `BookingActions`, which
@@ -231,6 +250,7 @@ export function BookingCard({
         balance={balance}
         balanceState={balanceState}
         slotStartsAt={slotStartsAt}
+        disputeDeadline={disputeDeadline}
         cancelDeadline={cancelDeadline}
         serverTime={serverTime}
         session={session}
